@@ -2,31 +2,33 @@ from gpio import *
 from time import *
 
 def main():
-    pinMode(0, IN)   # D0: Hőmérséklet szenzor
-    pinMode(1, OUT)  # D1: Klíma vezérlés
-    
-    # Beállíthatod a hőmérséklet küszöbértéket Celsius fokban
-    HOMERSEKLET_KUSZOB = 25
+    # Konfiguráljuk a kimenetet a locsoló rendszerhez
+    pinMode(2, OUT)  # D2: Locsolo rendszer vezerlese
+    locsolas_idotartam = 30  # Locsolas idotartama percben
     
     while True:
-        # Olvassuk a hőmérséklet értéket
-        homerseklet = analogRead(0)
+        # Aktuális idő lekérdezése a time modulból
+        aktualis_ido = localtime()
+        ora = aktualis_ido[3]    # Az óra a 3. elem a time tuple-ben
+        perc = aktualis_ido[4]   # A perc a 4. elem a time tuple-ben
         
-        # Konvertáljuk a nyers értéket Celsius fokra
-        # Megjegyzés: Ez a konverzió a szenzortól függően változhat
-        homerseklet_celsius = (homerseklet * 0.48875)
-        
-        print("Aktuális hőmérséklet:", round(homerseklet_celsius, 1), "°C")
-        
-        # Ha a hőmérséklet magasabb, mint a küszöbérték
-        if homerseklet_celsius > HOMERSEKLET_KUSZOB:
-            print("Hőmérséklet túl magas:", round(homerseklet_celsius, 1), "°C - Klíma bekapcsolása")
-            digitalWrite(1, HIGH)  # Klíma bekapcsolása
-        else:
-            print("Hőmérséklet megfelelő:", round(homerseklet_celsius, 1), "°C - Klíma kikapcsolása")
-            digitalWrite(1, LOW)   # Klíma kikapcsolása
+        # Időzítés ellenőrzése (17:00)
+        if ora == 17 and perc == 0:
+            print("17:00 - Locsolas kezdese")
+            digitalWrite(2, HIGH)  # Locsolo rendszer bekapcsolasa
             
-        sleep(10)  # 10 másodpercenként ellenőrizzük a hőmérsékletet
+            # Locsolás a beállított ideig
+            sleep(locsolas_idotartam * 60)  # Másodpercekre átváltva
+            
+            # Locsolás befejezése
+            digitalWrite(2, LOW)  # Locsolo rendszer kikapcsolasa
+            print("Locsolas befejezve")
+            
+            # Várjunk 1 percet, hogy ne induljon újra azonnal
+            sleep(60)
+        
+        # Ellenőrzés 10 másodpercenként
+        sleep(10)
         
 if __name__ == "__main__":
     main()
